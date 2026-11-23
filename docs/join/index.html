@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join a group on SplitLite</title>
+  <style>
+    :root { color-scheme: light dark; --accent: #0F6E56; }
+    @media (prefers-color-scheme: dark) { :root { --accent: #5DCAA5; } }
+    body { font-family: system-ui, sans-serif; max-width: 420px; margin: 0 auto; padding: 48px 16px; text-align: center; line-height: 1.5; }
+    .code { font: 600 1.6rem ui-monospace, monospace; letter-spacing: .08em; margin: 12px 0 24px; }
+    a.button { display: block; padding: 14px; border-radius: 24px; background: var(--accent); color: Canvas; text-decoration: none; font-weight: 600; }
+    p.small { font-size: .9rem; opacity: .8; }
+  </style>
+</head>
+<body>
+  <h1>Join a group on SplitLite</h1>
+  <p>Your invite code</p>
+  <div class="code" id="code">—</div>
+  <a class="button" id="open" href="splitlite://join">Open in SplitLite</a>
+  <p class="small">Don't have the app? Get it on
+    <a href="https://play.google.com/store/apps/details?id=com.anand8290.splitlite">Google Play</a>,
+    then open this link again or enter the code in the app.</p>
+  <script>
+    const code = new URLSearchParams(location.search).get("c") || "";
+    if (/^[A-Za-z0-9]{4,32}$/.test(code)) {
+      document.getElementById("code").textContent = code;
+      document.getElementById("open").href = "splitlite://join?c=" + encodeURIComponent(code);
+    }
+  </script>
+</body>
+</html>

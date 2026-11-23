@@ -1,0 +1,23 @@
+# Gradle / Android
+.gradle/
+build/
+.kotlin/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# Signing — never commit these
+keystore.properties
+*.keystore
+*.jks
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+.DS_Store

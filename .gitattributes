@@ -1,0 +1,10 @@
+* text=auto
+
+# The wrapper script must keep LF or it will not run on Linux or macOS.
+gradlew        text eol=lf
+gradlew.bat    text eol=crlf
+
+*.jar  binary
+*.ttf  binary
+*.png  binary
+*.webp binary
