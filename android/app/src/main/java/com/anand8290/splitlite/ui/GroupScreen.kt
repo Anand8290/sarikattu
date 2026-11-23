@@ -174,7 +174,7 @@ private fun ExpenseRow(e: Expense, d: GroupDetail, onClick: () -> Unit) {
         val toName = if (to == d.myMemberId) "you" else names[to] ?: "someone"
         ListItem(
             modifier = Modifier.clickable(onClick = onClick),
-            headlineContent = { Text("$payer paid $toName") },
+            content = { Text("$payer paid $toName") },
             supportingContent = { Text("Payment · ${e.spentOn}") },
             trailingContent = { Text(formatMoney(e.amountMinor, currency)) },
         )
@@ -184,7 +184,7 @@ private fun ExpenseRow(e: Expense, d: GroupDetail, onClick: () -> Unit) {
     val effect = (if (e.payerId == d.myMemberId) e.amountMinor else 0L) - myShare
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = { Text(e.title) },
+        content = { Text(e.title) },
         supportingContent = { Text("$payer paid ${formatMoney(e.amountMinor, currency)} · ${e.spentOn}") },
         trailingContent = {
             val text = when {

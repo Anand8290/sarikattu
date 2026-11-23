@@ -54,24 +54,24 @@ fun SettingsScreen(vm: AppViewModel, nav: NavHostController) {
         Column(Modifier.padding(padding)) {
             ListItem(
                 modifier = Modifier.clickable { nav.navigate(Routes.join()) },
-                headlineContent = { Text("Enter invite code") },
+                content = { Text("Enter invite code") },
                 supportingContent = { Text("If an invite link didn't open the app") },
             )
             HorizontalDivider()
             ListItem(
                 modifier = Modifier.clickable { open(SOURCE_URL) },
-                headlineContent = { Text("Source code") },
+                content = { Text("Source code") },
                 supportingContent = { Text("GitHub · GPL-3.0") },
             )
             HorizontalDivider()
             ListItem(
                 modifier = Modifier.clickable { open(PRIVACY_URL) },
-                headlineContent = { Text("Privacy policy") },
+                content = { Text("Privacy policy") },
             )
             HorizontalDivider()
             ListItem(
                 modifier = Modifier.clickable { confirmDelete = true },
-                headlineContent = { Text("Delete my data", color = MaterialTheme.colorScheme.error) },
+                content = { Text("Delete my data", color = MaterialTheme.colorScheme.error) },
                 supportingContent = { Text("Leave every group and erase this phone's account") },
             )
             HorizontalDivider()

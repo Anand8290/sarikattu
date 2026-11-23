@@ -25,7 +25,9 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace = "com.anand8290.splitlite"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) { minorApiLevel = 2 }
+    }
 
     defaultConfig {
         applicationId = "com.anand8290.splitlite"

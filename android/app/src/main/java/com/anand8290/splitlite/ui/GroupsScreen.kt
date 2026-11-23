@@ -94,7 +94,7 @@ fun GroupsScreen(vm: AppViewModel, nav: NavHostController, isConfigured: Boolean
 private fun GroupRow(group: GroupSummary, onClick: () -> Unit) {
     ListItem(
         modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = { Text(group.name) },
+        content = { Text(group.name) },
         supportingContent = { Text("${group.memberCount} members") },
         trailingContent = { BalanceLabel(group.myBalance, group.currency) },
     )

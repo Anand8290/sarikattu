@@ -86,14 +86,14 @@ fun JoinScreen(vm: AppViewModel, nav: NavHostController, initialCode: String?) {
             p.members.forEach { m ->
                 ListItem(
                     modifier = Modifier.selectable(selected = choice == m.id, enabled = !m.claimed) { choice = m.id },
-                    headlineContent = { Text(m.name) },
+                    content = { Text(m.name) },
                     supportingContent = { if (m.claimed) Text("Already joined") },
                     leadingContent = { RadioButton(selected = choice == m.id, onClick = null, enabled = !m.claimed) },
                 )
             }
             ListItem(
                 modifier = Modifier.selectable(selected = choice == NEW_MEMBER) { choice = NEW_MEMBER },
-                headlineContent = { Text("I'm not listed") },
+                content = { Text("I'm not listed") },
                 leadingContent = { RadioButton(selected = choice == NEW_MEMBER, onClick = null) },
             )
             if (choice == NEW_MEMBER) {

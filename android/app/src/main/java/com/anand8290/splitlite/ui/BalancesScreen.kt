@@ -66,7 +66,7 @@ fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             items(d.members, key = { it.id }) { m ->
                 val b = balances[m.id] ?: 0L
                 ListItem(
-                    headlineContent = { Text(nameOf(m.id)) },
+                    content = { Text(nameOf(m.id)) },
                     trailingContent = {
                         Text(
                             when {
@@ -89,7 +89,7 @@ fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             }
             items(transfers) { t ->
                 ListItem(
-                    headlineContent = { Text("${nameOf(t.from)} → ${nameOf(t.to)}") },
+                    content = { Text("${nameOf(t.from)} → ${nameOf(t.to)}") },
                     supportingContent = { Text(formatMoney(t.amountMinor, currency)) },
                     trailingContent = { FilledTonalButton(onClick = { settling = t }) { Text("Settle") } },
                 )
