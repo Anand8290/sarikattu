@@ -57,8 +57,9 @@ android {
 
     buildTypes {
         release {
-            // Off until release builds are verified with R8 keep rules for Ktor/serialization.
-            isMinifyEnabled = false
+            // R8 shrinks code (unused extended icons especially) and drops unused resources.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
