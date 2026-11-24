@@ -26,6 +26,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.insert
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -60,7 +66,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,12 +77,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -109,7 +110,8 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
     val haptic = rememberConfirmHaptic()
 
     var title by rememberSaveable { mutableStateOf(existing?.title ?: "") }
-    var amountText by rememberSaveable { mutableStateOf(existing?.let { minorToInput(it.amountMinor, currency) } ?: "") }
+    val amountState = rememberTextFieldState(existing?.let { minorToInput(it.amountMinor, currency) } ?: "")
+    val amountText = amountState.text.toString()
     var payerId by rememberSaveable { mutableStateOf(existing?.payerId ?: d.myMemberId ?: d.members.first().id) }
     var among by rememberSaveable {
         mutableStateOf(existing?.splits?.map { it.memberId } ?: d.members.map { it.id })
@@ -131,7 +133,7 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
     fun nameOf(id: String) = if (id == d.myMemberId) "You" else d.members.firstOrNull { it.id == id }?.name ?: "?"
     fun save() {
         showErrors = true
-        if (!valid || amount == null) return
+        if (!valid) return // valid already includes amount != null
         vm.run(
             {
                 saveExpense(
@@ -200,10 +202,7 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
                 return@Column
             }
 
-            AmountCard(amountText, currency, isError = showErrors && amount == null) {
-                // Only digits and one decimal separator; the number keyboard alone doesn't guarantee that.
-                if (it.length <= 15 && it.matches(AMOUNT_CHARS)) amountText = it
-            }
+            AmountCard(amountState, currency, isError = showErrors && amount == null)
             if (showErrors && amount == null) {
                 Text(
                     "Enter an amount above zero",
@@ -322,7 +321,7 @@ private fun label(m: Member, me: String?) = if (m.id == me) "You" else m.name
 
 /** The amount in a tinted card, calculator style, with the group's currency as a chip. */
 @Composable
-private fun AmountCard(value: String, currency: String, isError: Boolean, onChange: (String) -> Unit) {
+private fun AmountCard(state: TextFieldState, currency: String, isError: Boolean) {
     val symbol = remember(currency) {
         runCatching { Currency.getInstance(currency).getSymbol(Locale.getDefault()) }.getOrDefault(currency)
     }
@@ -348,17 +347,18 @@ private fun AmountCard(value: String, currency: String, isError: Boolean, onChan
                 }
             }
             BasicTextField(
-                value = value,
-                onValueChange = onChange,
+                state = state,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 textStyle = style,
-                singleLine = true,
+                lineLimits = TextFieldLineLimits.SingleLine,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 cursorBrush = SolidColor(onCard),
-                visualTransformation = PrefixTransformation("$symbol "),
-                decorationBox = { inner ->
+                inputTransformation = AmountInput,
+                // Shows "₹ " in front of the typed amount without making it part of the text.
+                outputTransformation = remember(symbol) { OutputTransformation { if (length > 0) insert(0, "$symbol ") } },
+                decorator = { inner ->
                     Box {
-                        if (value.isEmpty()) Text("$symbol 0", style = style.copy(color = onCard.copy(alpha = 0.4f)))
+                        if (state.text.isEmpty()) Text("$symbol 0", style = style.copy(color = onCard.copy(alpha = 0.4f)))
                         inner()
                     }
                 },
@@ -367,16 +367,10 @@ private fun AmountCard(value: String, currency: String, isError: Boolean, onChan
     }
 }
 
-/** Shows "₹" in front of the typed amount without making it part of the text. */
-private class PrefixTransformation(private val prefix: String) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        if (text.isEmpty()) return TransformedText(text, OffsetMapping.Identity)
-        val mapping = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int) = offset + prefix.length
-            override fun transformedToOriginal(offset: Int) = (offset - prefix.length).coerceIn(0, text.length)
-        }
-        return TransformedText(AnnotatedString(prefix) + text, mapping)
-    }
+/** Only digits and one decimal separator, at most 15 characters; the number keyboard alone doesn't guarantee that. */
+private val AmountInput = InputTransformation {
+    val text = asCharSequence()
+    if (text.length > 15 || !AMOUNT_CHARS.matches(text)) revertAllChanges()
 }
 
 /** Who paid and who shares it: summary rows that open sheets, the same for 2 or 300 people. */
@@ -475,7 +469,7 @@ private fun PayerSheet(d: GroupDetail, people: List<Member>, selected: String, o
         .distinct().take(4)
     val recent = recentIds.mapNotNull { id -> people.firstOrNull { it.id == id } }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberFullSheetState()) {
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Who paid?", style = MaterialTheme.typography.titleLarge)
             SearchField(query) { query = it }
@@ -512,7 +506,7 @@ private fun SplitSheet(
     onChange: (List<String>) -> Unit, onDismiss: () -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberFullSheetState()) {
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Split between", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
@@ -556,7 +550,7 @@ private fun SplitSheet(
 private fun DateSheet(date: String, onPick: (String) -> Unit, onPickCustom: () -> Unit, onDismiss: () -> Unit) {
     val today = LocalDate.now()
     val quick = listOf("Today" to today, "Yesterday" to today.minusDays(1), "2 days ago" to today.minusDays(2))
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberFullSheetState()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("When was it?", style = MaterialTheme.typography.titleLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

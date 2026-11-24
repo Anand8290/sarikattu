@@ -18,7 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.maxLengthTrim
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -42,7 +47,6 @@ import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,12 +79,15 @@ private val POPULAR_CURRENCIES = listOf("INR", "USD", "EUR", "GBP", "AED", "SGD"
 fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
     val busy by vm.busy.collectAsState()
     val haptic = rememberConfirmHaptic()
-    var name by rememberSaveable { mutableStateOf("") }
+    val nameState = rememberTextFieldState()
     var currency by rememberSaveable {
         mutableStateOf(runCatching { Currency.getInstance(Locale.getDefault()).currencyCode }.getOrDefault("INR"))
     }
-    var myName by rememberSaveable { mutableStateOf("") }
-    var newMember by rememberSaveable { mutableStateOf("") }
+    val myNameState = rememberTextFieldState()
+    val newMemberState = rememberTextFieldState()
+    val name = nameState.text.toString()
+    val myName = myNameState.text.toString()
+    val newMember = newMemberState.text.toString()
     val others = rememberSaveable(
         saver = listSaver<SnapshotStateList<String>, String>(save = { it.toList() }, restore = { it.toMutableStateList() }),
     ) { mutableStateListOf() }
@@ -90,9 +97,9 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
     val valid = name.isNotBlank() && myName.isNotBlank()
 
     fun addMember() {
-        val n = newMember.trim().take(40)
+        val n = newMember.trim()
         if (n.isNotEmpty()) others.add(n)
-        newMember = ""
+        newMemberState.clearText()
     }
 
     fun create() {
@@ -123,8 +130,7 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             GroupCard(
-                name = name,
-                onName = { name = it.take(80) },
+                nameState = nameState,
                 currency = currency,
                 onCurrency = { pickCurrency = true },
                 isError = showErrors && name.isBlank(),
@@ -152,7 +158,7 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
                         null
                     },
                 ) {
-                    InlineField(myName, { myName = it.take(40) }, "Your name")
+                    InlineField(myNameState, "Your name", maxLength = 40)
                 }
                 others.forEachIndexed { i, member ->
                     SegmentedListItem(
@@ -179,7 +185,7 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
                         }
                     },
                 ) {
-                    InlineField(newMember, { newMember = it.take(40) }, "Add a member", onDone = ::addMember)
+                    InlineField(newMemberState, "Add a member", maxLength = 40, onDone = ::addMember)
                 }
             }
             Text(
@@ -203,7 +209,8 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
 
 /** The group's name, big, next to a live preview of its badge, with the currency as a chip. */
 @Composable
-private fun GroupCard(name: String, onName: (String) -> Unit, currency: String, onCurrency: () -> Unit, isError: Boolean) {
+private fun GroupCard(nameState: TextFieldState, currency: String, onCurrency: () -> Unit, isError: Boolean) {
+    val name = nameState.text.toString()
     val onCard = MaterialTheme.colorScheme.onSecondaryContainer
     Surface(
         Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -220,7 +227,7 @@ private fun GroupCard(name: String, onName: (String) -> Unit, currency: String, 
                 Column(Modifier.padding(start = 16.dp).weight(1f)) {
                     Text("Group name", style = MaterialTheme.typography.labelLarge)
                     InlineField(
-                        name, onName, "Goa trip",
+                        nameState, "Goa trip", maxLength = 80,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             color = if (isError) MaterialTheme.colorScheme.error else onCard,
                         ),
@@ -247,28 +254,29 @@ private fun GroupCard(name: String, onName: (String) -> Unit, currency: String, 
 /** A borderless text field for use inside cards and list tiles. */
 @Composable
 private fun InlineField(
-    value: String,
-    onChange: (String) -> Unit,
+    state: TextFieldState,
     placeholder: String,
+    maxLength: Int,
     style: TextStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
     capitalization: KeyboardCapitalization = KeyboardCapitalization.Words,
     onDone: (() -> Unit)? = null,
 ) {
     BasicTextField(
-        value = value,
-        onValueChange = onChange,
+        state = state,
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         textStyle = style,
-        singleLine = true,
+        lineLimits = TextFieldLineLimits.SingleLine,
+        inputTransformation = InputTransformation.maxLengthTrim(maxLength),
         cursorBrush = SolidColor(if (style.color == Color.Unspecified) MaterialTheme.colorScheme.primary else style.color),
         keyboardOptions = KeyboardOptions(
             capitalization = capitalization,
             imeAction = if (onDone != null) ImeAction.Done else ImeAction.Next,
         ),
-        keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
-        decorationBox = { inner ->
+        // Enter on "Add a member" adds the name; elsewhere it moves to the next field as usual.
+        onKeyboardAction = { default -> if (onDone != null) onDone() else default() },
+        decorator = { inner ->
             Box {
-                if (value.isEmpty()) Text(placeholder, style = style.copy(color = style.color.copy(alpha = 0.45f)))
+                if (state.text.isEmpty()) Text(placeholder, style = style.copy(color = style.color.copy(alpha = 0.45f)))
                 inner()
             }
         },
@@ -293,7 +301,7 @@ private fun CurrencySheet(selected: String, onPick: (String) -> Unit, onDismiss:
     val shown = if (query.isBlank()) all else all.filter {
         it.contains(query.trim(), ignoreCase = true) || displayName(it).contains(query.trim(), ignoreCase = true)
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberFullSheetState()) {
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Currency", style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(

@@ -209,3 +209,11 @@ fun LazyListState.isScrollingUp(): Boolean {
 fun segmentColors() = androidx.compose.material3.ListItemDefaults.segmentedColors(
     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
 )
+
+/** A bottom sheet that opens fully, without the half-open step. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun rememberFullSheetState() = androidx.compose.material3.rememberBottomSheetState(
+    androidx.compose.material3.SheetValue.Hidden,
+    setOf(androidx.compose.material3.SheetValue.Hidden, androidx.compose.material3.SheetValue.Expanded),
+)
