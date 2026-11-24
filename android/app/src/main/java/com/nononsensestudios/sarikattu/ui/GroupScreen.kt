@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Column
@@ -23,6 +21,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Balance
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
@@ -33,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -79,7 +80,7 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
     var menuOpen by remember { mutableStateOf(false) }
     var confirmLeave by remember { mutableStateOf(false) }
     val topBar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val toolbar = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
+
     val refresh = rememberPullToRefreshState()
     val pager = rememberPagerState { 2 }
     val scope = rememberCoroutineScope()
@@ -94,6 +95,11 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
                 title = { Text(detail?.group?.name ?: "") },
                 navigationIcon = { BackButton { nav.popBackStack() } },
                 actions = {
+                    detail?.let { d ->
+                        IconButton(onClick = { context.startActivity(shareInvite(d)) }) {
+                            Icon(Icons.Default.Share, "Share invite")
+                        }
+                    }
                     Box {
                         IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, "More") }
                         DropdownMenu(menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -114,39 +120,29 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             return@Scaffold
         }
         Box(Modifier.fillMaxSize().padding(padding)) {
-            Column(Modifier.fillMaxSize()) {
-                PrimaryTabRow(selectedTabIndex = pager.currentPage) {
-                    listOf("Expenses", "Balances").forEachIndexed { i, label ->
-                        Tab(
-                            selected = pager.currentPage == i,
-                            onClick = { showTab(i) },
-                            text = { Text(label, style = MaterialTheme.typography.titleSmall) },
-                        )
-                    }
-                }
-                PullToRefreshBox(
-                    isRefreshing = busy,
-                    onRefresh = { vm.run({ refreshGroup(groupId) }) },
-                    modifier = Modifier.fillMaxSize(),
-                    state = refresh,
-                    indicator = {
-                        PullToRefreshDefaults.LoadingIndicator(
-                            state = refresh,
-                            isRefreshing = busy,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                        )
-                    },
-                ) {
-                    HorizontalPager(pager, Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
-                        when (page) {
-                            0 -> ExpensesTab(d, Modifier.nestedScroll(toolbar), onBalances = { showTab(1) }) {
-                                nav.navigate(Routes.expense(groupId, it.id))
-                            }
-                            else -> BalancesTab(vm, d, Modifier.nestedScroll(toolbar))
+            PullToRefreshBox(
+                isRefreshing = busy,
+                onRefresh = { vm.run({ refreshGroup(groupId) }) },
+                modifier = Modifier.fillMaxSize(),
+                state = refresh,
+                indicator = {
+                    PullToRefreshDefaults.LoadingIndicator(
+                        state = refresh,
+                        isRefreshing = busy,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                },
+            ) {
+                HorizontalPager(pager, Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
+                    when (page) {
+                        0 -> ExpensesTab(d, Modifier, onBalances = { showTab(1) }) {
+                            nav.navigate(Routes.expense(groupId, it.id))
                         }
+                        else -> BalancesTab(vm, d)
                     }
                 }
             }
+            // Always visible: it switches between the two tabs, so it shouldn't hide while scrolling.
             HorizontalFloatingToolbar(
                 expanded = true,
                 floatingActionButton = {
@@ -158,16 +154,18 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
                     .offset(y = (-16).dp),
-                scrollBehavior = toolbar,
             ) {
-                IconButton(onClick = { context.startActivity(shareInvite(d)) }) {
-                    Icon(Icons.Default.Share, "Share invite")
-                }
-                // On the Balances tab the Settle buttons are right there, so only offer the shortcut elsewhere.
-                if (pager.currentPage == 0) {
-                    TextButton(onClick = { showTab(1) }) {
-                        Icon(Icons.Default.Check, null)
-                        Text("Settle up", Modifier.padding(start = 8.dp))
+                listOf(
+                    Triple("Expenses", Icons.AutoMirrored.Filled.ReceiptLong, 0),
+                    Triple("Balances", Icons.Default.Balance, 1),
+                ).forEach { (label, icon, page) ->
+                    ToggleButton(
+                        checked = pager.targetPage == page,
+                        onCheckedChange = { showTab(page) },
+                        modifier = Modifier.padding(horizontal = 2.dp),
+                    ) {
+                        Icon(icon, null, Modifier.size(ToggleButtonDefaults.IconSize))
+                        Text(label, Modifier.padding(start = 8.dp))
                     }
                 }
             }

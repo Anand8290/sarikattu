@@ -32,8 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -393,7 +393,7 @@ private fun SummaryRows(
             onClick = onPayer,
             shapes = ListItemDefaults.segmentedShapes(0, 2),
             colors = segmentColors(),
-            leadingContent = { Icon(Icons.Default.Person, null) },
+            leadingContent = { Icon(Icons.Default.AccountBalanceWallet, null) },
             overlineContent = { Text("Paid by") },
             trailingContent = chevron,
         ) { Text(payerName) }
@@ -402,7 +402,7 @@ private fun SummaryRows(
             shapes = ListItemDefaults.segmentedShapes(1, 2),
             colors = segmentColors(),
             modifier = gap,
-            leadingContent = { Icon(Icons.Default.Face, null) },
+            leadingContent = { Icon(Icons.Default.Groups, null) },
             overlineContent = { Text("Split equally") },
             supportingContent = { StackedAvatars(people.filter { it.id in among }) },
             trailingContent = {
