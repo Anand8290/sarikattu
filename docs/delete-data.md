@@ -1,12 +1,12 @@
 ---
-title: Delete your SplitLite data
+title: Delete your SariKattu data
 ---
 
-# Delete your SplitLite data
+# Delete your SariKattu data
 
 ## In the app
 
-1. Open SplitLite.
+1. Open SariKattu.
 2. Tap **Settings** (top right of the groups screen).
 3. Tap **Delete my data**, then **Delete**.
 
@@ -22,5 +22,5 @@ To leave only one group, open it, tap the **⋮** menu and choose **Leave group*
 ## If you no longer have the app
 
 Your account was anonymous, so it can't be looked up by name or email. Open an issue at
-<https://github.com/Anand8290/splitlite/issues> with your group's invite code and your name in that group,
+<https://github.com/Anand8290/sarikattu/issues> with your group's invite code and your name in that group,
 and we'll remove you.

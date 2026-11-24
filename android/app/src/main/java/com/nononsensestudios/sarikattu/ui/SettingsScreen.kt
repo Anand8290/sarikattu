@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -29,10 +29,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.anand8290.splitlite.BuildConfig
+import com.nononsensestudios.sarikattu.BuildConfig
 
-private const val SOURCE_URL = "https://github.com/Anand8290/splitlite"
-private const val PRIVACY_URL = "https://anand8290.github.io/splitlite/privacy-policy"
+private const val SOURCE_URL = "https://github.com/Anand8290/sarikattu"
+private const val PRIVACY_URL = "https://anand8290.github.io/sarikattu/privacy-policy"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +76,7 @@ fun SettingsScreen(vm: AppViewModel, nav: NavHostController) {
             )
             HorizontalDivider()
             Text(
-                "SplitLite ${BuildConfig.VERSION_NAME}",
+                "SariKattu ${BuildConfig.VERSION_NAME}",
                 Modifier.fillMaxWidth().padding(24.dp),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,

@@ -1,4 +1,4 @@
-SplitLite keeps track of shared expenses for trips, flatmates, dinners and anything else you pay for together.
+SariKattu keeps track of shared expenses for trips, flatmates, dinners and anything else you pay for together.
 
 • Create a group and share the invite link on WhatsApp or anywhere else
 • Everyone adds expenses from their own phone
@@ -9,4 +9,4 @@ SplitLite keeps track of shared expenses for trips, flatmates, dinners and anyth
 No sign-up: your phone gets an anonymous account, so no email or phone number is needed.
 No ads, no paid tier, and no limit on how many expenses you add.
 
-SplitLite is open source (GPL-3.0). The code and the server setup are on GitHub, so you can check exactly what it does or run your own server.
+SariKattu is open source (GPL-3.0). The code and the server setup are on GitHub, so you can check exactly what it does or run your own server.

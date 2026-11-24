@@ -24,13 +24,13 @@ val keystoreProps = Properties().apply {
 }
 
 android {
-    namespace = "com.anand8290.splitlite"
+    namespace = "com.nononsensestudios.sarikattu"
     compileSdk {
         version = release(37) { minorApiLevel = 2 }
     }
 
     defaultConfig {
-        applicationId = "com.anand8290.splitlite"
+        applicationId = "com.nononsensestudios.sarikattu"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -40,7 +40,7 @@ android {
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${setting("SUPABASE_ANON_KEY")}\"")
         buildConfigField(
             "String", "JOIN_URL",
-            "\"${setting("JOIN_URL", "https://anand8290.github.io/splitlite/join/")}\""
+            "\"${setting("JOIN_URL", "https://anand8290.github.io/sarikattu/join/")}\""
         )
     }
 

@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SplitLite"
+rootProject.name = "SariKattu"
 include(":app")

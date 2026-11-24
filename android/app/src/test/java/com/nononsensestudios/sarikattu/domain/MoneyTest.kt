@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.domain
+package com.nononsensestudios.sarikattu.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

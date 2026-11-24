@@ -1,12 +1,12 @@
-package com.anand8290.splitlite.data
+package com.nononsensestudios.sarikattu.data
 
-import com.anand8290.splitlite.domain.Expense
-import com.anand8290.splitlite.domain.GroupDetail
-import com.anand8290.splitlite.domain.GroupInfo
-import com.anand8290.splitlite.domain.GroupPreview
-import com.anand8290.splitlite.domain.GroupSummary
-import com.anand8290.splitlite.domain.Member
-import com.anand8290.splitlite.domain.Split
+import com.nononsensestudios.sarikattu.domain.Expense
+import com.nononsensestudios.sarikattu.domain.GroupDetail
+import com.nononsensestudios.sarikattu.domain.GroupInfo
+import com.nononsensestudios.sarikattu.domain.GroupPreview
+import com.nononsensestudios.sarikattu.domain.GroupSummary
+import com.nononsensestudios.sarikattu.domain.Member
+import com.nononsensestudios.sarikattu.domain.Split
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from

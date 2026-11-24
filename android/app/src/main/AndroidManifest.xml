@@ -4,12 +4,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".SplitLiteApp"
+        android:name=".SariKattuApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SplitLite">
+        android:theme="@style/Theme.SariKattu">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -19,12 +19,12 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Invite links: splitlite://join?c=CODE (opened from the GitHub Pages join page). -->
+            <!-- Invite links: sarikattu://join?c=CODE (opened from the GitHub Pages join page). -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="splitlite" android:host="join" />
+                <data android:scheme="sarikattu" android:host="join" />
             </intent-filter>
         </activity>
     </application>

@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,13 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.anand8290.splitlite.domain.Transfer
-import com.anand8290.splitlite.domain.computeBalances
-import com.anand8290.splitlite.domain.formatMoney
-import com.anand8290.splitlite.domain.minorToInput
-import com.anand8290.splitlite.domain.parseMoney
-import com.anand8290.splitlite.domain.settlementSplits
-import com.anand8290.splitlite.domain.simplifyDebts
+import com.nononsensestudios.sarikattu.domain.Transfer
+import com.nononsensestudios.sarikattu.domain.computeBalances
+import com.nononsensestudios.sarikattu.domain.formatMoney
+import com.nononsensestudios.sarikattu.domain.minorToInput
+import com.nononsensestudios.sarikattu.domain.parseMoney
+import com.nononsensestudios.sarikattu.domain.settlementSplits
+import com.nononsensestudios.sarikattu.domain.simplifyDebts
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)

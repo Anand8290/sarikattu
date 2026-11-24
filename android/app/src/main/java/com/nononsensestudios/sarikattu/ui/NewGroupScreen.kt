@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

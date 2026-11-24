@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping. SplitLite stays deliberately small, so:
+Thanks for helping. SariKattu stays deliberately small, so:
 
 - **Bugs and fixes**: pull requests are welcome.
 - **New features**: open an issue first so we can agree it belongs in a minimal app.

@@ -42,5 +42,5 @@ jobs:
         run: ./gradlew testDebugUnitTest bundleRelease --console=plain
       - uses: actions/upload-artifact@v7
         with:
-          name: splitlite-release-aab
+          name: sarikattu-release-aab
           path: android/app/build/outputs/bundle/release/*.aab

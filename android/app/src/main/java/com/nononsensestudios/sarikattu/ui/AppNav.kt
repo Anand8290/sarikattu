@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import android.net.Uri
 import androidx.compose.foundation.layout.Box

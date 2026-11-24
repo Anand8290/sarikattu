@@ -1,16 +1,16 @@
 ---
-title: SplitLite privacy policy
+title: SariKattu privacy policy
 ---
 
 # Privacy policy
 
 _Last updated: 23 November 2026_
 
-SplitLite is an open-source app for splitting expenses within a group. This policy explains what it stores.
+SariKattu is an open-source app for splitting expenses within a group. This policy explains what it stores.
 
 ## What is stored
 
-When you use SplitLite, the app creates an **anonymous account** for your phone. You don't give an email,
+When you use SariKattu, the app creates an **anonymous account** for your phone. You don't give an email,
 phone number or password.
 
 The app stores on its server only what you and your group members enter:
@@ -41,8 +41,8 @@ More detail: [Delete your data](delete-data).
 
 ## Children
 
-SplitLite is not directed at children under 13.
+SariKattu is not directed at children under 13.
 
 ## Contact
 
-Open an issue at <https://github.com/Anand8290/splitlite/issues>.
+Open an issue at <https://github.com/Anand8290/sarikattu/issues>.

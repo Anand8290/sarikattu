@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import android.content.Intent
 import androidx.compose.foundation.clickable
@@ -48,11 +48,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.anand8290.splitlite.BuildConfig
-import com.anand8290.splitlite.domain.Expense
-import com.anand8290.splitlite.domain.GroupDetail
-import com.anand8290.splitlite.domain.computeBalances
-import com.anand8290.splitlite.domain.formatMoney
+import com.nononsensestudios.sarikattu.BuildConfig
+import com.nononsensestudios.sarikattu.domain.Expense
+import com.nononsensestudios.sarikattu.domain.GroupDetail
+import com.nononsensestudios.sarikattu.domain.computeBalances
+import com.nononsensestudios.sarikattu.domain.formatMoney
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -199,8 +199,8 @@ private fun ExpenseRow(e: Expense, d: GroupDetail, onClick: () -> Unit) {
 
 private fun shareInvite(d: GroupDetail): Intent {
     val code = d.group.inviteCode
-    val text = "Join \"${d.group.name}\" on SplitLite: ${BuildConfig.JOIN_URL}?c=$code\n" +
-        "Or open SplitLite and enter the code $code"
+    val text = "Join \"${d.group.name}\" on SariKattu: ${BuildConfig.JOIN_URL}?c=$code\n" +
+        "Or open SariKattu and enter the code $code"
     val send = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)

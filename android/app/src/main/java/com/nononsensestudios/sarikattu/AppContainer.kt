@@ -1,9 +1,9 @@
-package com.anand8290.splitlite
+package com.nononsensestudios.sarikattu
 
 import android.app.Application
 import android.content.Context
-import com.anand8290.splitlite.data.LocalCache
-import com.anand8290.splitlite.data.SplitRepository
+import com.nononsensestudios.sarikattu.data.LocalCache
+import com.nononsensestudios.sarikattu.data.SplitRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -24,7 +24,7 @@ class AppContainer(context: Context) {
     val repository = SplitRepository(supabase, LocalCache(File(context.filesDir, "cache")))
 }
 
-class SplitLiteApp : Application() {
+class SariKattuApp : Application() {
     lateinit var container: AppContainer
         private set
 

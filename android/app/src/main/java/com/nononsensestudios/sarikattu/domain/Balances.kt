@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.domain
+package com.nononsensestudios.sarikattu.domain
 
 /**
  * Net balance per member: positive = the group owes them, negative = they owe.

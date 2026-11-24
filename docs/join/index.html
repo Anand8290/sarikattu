@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Join a group on SplitLite</title>
+  <title>Join a group on SariKattu</title>
   <style>
     :root { color-scheme: light dark; --accent: #0F6E56; }
     @media (prefers-color-scheme: dark) { :root { --accent: #5DCAA5; } }
@@ -14,18 +14,18 @@
   </style>
 </head>
 <body>
-  <h1>Join a group on SplitLite</h1>
+  <h1>Join a group on SariKattu</h1>
   <p>Your invite code</p>
   <div class="code" id="code">—</div>
-  <a class="button" id="open" href="splitlite://join">Open in SplitLite</a>
+  <a class="button" id="open" href="sarikattu://join">Open in SariKattu</a>
   <p class="small">Don't have the app? Get it on
-    <a href="https://play.google.com/store/apps/details?id=com.anand8290.splitlite">Google Play</a>,
+    <a href="https://play.google.com/store/apps/details?id=com.nononsensestudios.sarikattu">Google Play</a>,
     then open this link again or enter the code in the app.</p>
   <script>
     const code = new URLSearchParams(location.search).get("c") || "";
     if (/^[A-Za-z0-9]{4,32}$/.test(code)) {
       document.getElementById("code").textContent = code;
-      document.getElementById("open").href = "splitlite://join?c=" + encodeURIComponent(code);
+      document.getElementById("open").href = "sarikattu://join?c=" + encodeURIComponent(code);
     }
   </script>
 </body>

@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,7 +15,7 @@ private val Teal = Color(0xFF0F6E56)
 private val TealLight = Color(0xFF5DCAA5)
 
 @Composable
-fun SplitLiteTheme(content: @Composable () -> Unit) {
+fun SariKattuTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val context = LocalContext.current
     val scheme = when {

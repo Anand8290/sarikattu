@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,10 +41,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.anand8290.splitlite.domain.formatMoney
-import com.anand8290.splitlite.domain.minorToInput
-import com.anand8290.splitlite.domain.parseMoney
-import com.anand8290.splitlite.domain.splitEqually
+import com.nononsensestudios.sarikattu.domain.formatMoney
+import com.nononsensestudios.sarikattu.domain.minorToInput
+import com.nononsensestudios.sarikattu.domain.parseMoney
+import com.nononsensestudios.sarikattu.domain.splitEqually
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset

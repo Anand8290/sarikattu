@@ -1,7 +1,7 @@
-package com.anand8290.splitlite.data
+package com.nononsensestudios.sarikattu.data
 
-import com.anand8290.splitlite.domain.GroupDetail
-import com.anand8290.splitlite.domain.GroupSummary
+import com.nononsensestudios.sarikattu.domain.GroupDetail
+import com.nononsensestudios.sarikattu.domain.GroupSummary
 import kotlinx.serialization.json.Json
 import java.io.File
 

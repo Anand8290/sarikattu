@@ -1,4 +1,4 @@
-package com.anand8290.splitlite
+package com.nononsensestudios.sarikattu
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,21 +7,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.anand8290.splitlite.ui.AppNav
-import com.anand8290.splitlite.ui.AppViewModel
-import com.anand8290.splitlite.ui.SplitLiteTheme
+import com.nononsensestudios.sarikattu.ui.AppNav
+import com.nononsensestudios.sarikattu.ui.AppViewModel
+import com.nononsensestudios.sarikattu.ui.SariKattuTheme
 
 class MainActivity : ComponentActivity() {
-    /** Invite code from a splitlite://join?c=CODE link, consumed by the nav graph. */
+    /** Invite code from a sarikattu://join?c=CODE link, consumed by the nav graph. */
     private val pendingJoinCode = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if (savedInstanceState == null) handleIntent(intent)
-        val container = (application as SplitLiteApp).container
+        val container = (application as SariKattuApp).container
         setContent {
-            SplitLiteTheme {
+            SariKattuTheme {
                 val vm = viewModel { AppViewModel(container.repository) }
                 AppNav(
                     vm = vm,
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         val uri = intent?.data ?: return
-        if (uri.scheme == "splitlite" && uri.host == "join") {
+        if (uri.scheme == "sarikattu" && uri.host == "join") {
             uri.getQueryParameter("c")?.trim()?.takeIf { it.isNotEmpty() }?.let { pendingJoinCode.value = it }
         }
     }

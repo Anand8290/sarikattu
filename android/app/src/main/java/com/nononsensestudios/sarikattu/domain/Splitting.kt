@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.domain
+package com.nononsensestudios.sarikattu.domain
 
 /**
  * Splits [amountMinor] equally between [memberIds].

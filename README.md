@@ -1,4 +1,4 @@
-# SplitLite
+# SariKattu
 
 A minimal, open-source app for splitting group expenses. Free, no ads, no accounts, no limits.
 
@@ -59,15 +59,15 @@ The anon key is meant to be public. It's safe in the app because the database ru
 
 ## Invite links
 
-The app shares links like `https://anand8290.github.io/splitlite/join/?c=CODE`. That page (`docs/join/`)
-opens the app through `splitlite://join?c=CODE`. If it doesn't open, people can type the code in the app.
+The app shares links like `https://anand8290.github.io/sarikattu/join/?c=CODE`. That page (`docs/join/`)
+opens the app through `sarikattu://join?c=CODE`. If it doesn't open, people can type the code in the app.
 Set `JOIN_URL` in `local.properties` to point at your own copy of the page.
 
 ## Project layout
 
 ```
 android/            Android app (single :app module)
-  app/src/main/java/com/anand8290/splitlite/
+  app/src/main/java/com/nononsensestudios/sarikattu/
     domain/         splitting, balances, money formatting — pure Kotlin, unit-tested
     data/           Supabase calls and the offline JSON cache
     ui/             Compose screens

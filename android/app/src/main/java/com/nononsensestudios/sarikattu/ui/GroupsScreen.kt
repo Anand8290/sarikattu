@@ -1,4 +1,4 @@
-package com.anand8290.splitlite.ui
+package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.anand8290.splitlite.domain.GroupSummary
-import com.anand8290.splitlite.domain.formatMoney
+import com.nononsensestudios.sarikattu.domain.GroupSummary
+import com.nononsensestudios.sarikattu.domain.formatMoney
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +50,7 @@ fun GroupsScreen(vm: AppViewModel, nav: NavHostController, isConfigured: Boolean
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SplitLite") },
+                title = { Text("SariKattu") },
                 actions = {
                     IconButton(onClick = { nav.navigate(Routes.SETTINGS) }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
