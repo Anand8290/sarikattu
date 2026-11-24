@@ -25,7 +25,8 @@ create table public.expenses (
     group_id      uuid not null references public.groups (id) on delete cascade,
     title         text not null check (char_length(title) between 1 and 80),
     amount_minor  bigint not null check (amount_minor > 0),
-    payer_id      uuid not null references public.members (id),
+    -- Members are only deleted along with their group, so cascading here is safe.
+    payer_id      uuid not null references public.members (id) on delete cascade,
     is_settlement boolean not null default false,
     spent_on      date not null default current_date,
     created_at    timestamptz not null default now(),
@@ -36,7 +37,7 @@ create index expenses_group_idx on public.expenses (group_id);
 
 create table public.expense_splits (
     expense_id   uuid not null references public.expenses (id) on delete cascade,
-    member_id    uuid not null references public.members (id),
+    member_id    uuid not null references public.members (id) on delete cascade,
     amount_minor bigint not null check (amount_minor >= 0),
     primary key (expense_id, member_id)
 );

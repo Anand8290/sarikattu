@@ -34,6 +34,8 @@ create policy "members read splits" on public.expense_splits
 create policy "users read own access" on public.group_access
     for select to authenticated using (user_id = auth.uid());
 
--- No direct writes from the app.
-revoke insert, update, delete on all tables in schema public from anon, authenticated;
-revoke all on all tables in schema public from anon;
+-- Signed-in users may read (the policies above pick which rows); there are no direct writes.
+-- New Supabase projects don't grant table access to API roles by default, so grant it here.
+revoke all on all tables in schema public from anon, authenticated;
+grant select on public.groups, public.members, public.expenses, public.expense_splits, public.group_access
+    to authenticated;
