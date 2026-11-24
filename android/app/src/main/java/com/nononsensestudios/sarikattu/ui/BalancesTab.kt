@@ -34,6 +34,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.nononsensestudios.sarikattu.domain.GroupDetail
 import com.nononsensestudios.sarikattu.domain.Transfer
 import com.nononsensestudios.sarikattu.domain.computeBalances
 import com.nononsensestudios.sarikattu.domain.formatMoney
@@ -43,11 +44,11 @@ import com.nononsensestudios.sarikattu.domain.settlementSplits
 import com.nononsensestudios.sarikattu.domain.simplifyDebts
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+/** The Balances tab of a group: suggested payments with Settle buttons, then everyone's balance. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
-    val detail by vm.repo.group(groupId).collectAsState()
-    val d = detail ?: return ScreenLoading()
+fun BalancesTab(vm: AppViewModel, d: GroupDetail, modifier: Modifier = Modifier) {
+    val groupId = d.group.id
     val currency = d.group.currency
     val balances = computeBalances(d.members, d.expenses)
     val transfers = simplifyDebts(balances)
@@ -59,64 +60,52 @@ fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
     fun nameOf(id: String) = if (id == d.myMemberId) "You" else d.members.firstOrNull { it.id == id }?.name ?: "?"
     var settling by remember { mutableStateOf<Transfer?>(null) }
     val haptic = rememberConfirmHaptic()
-    val topBar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(topBar.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = { Text("Balances") },
-                navigationIcon = { BackButton { nav.popBackStack() } },
-                scrollBehavior = topBar,
-            )
-        },
-    ) { padding ->
-        LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-        ) {
-            if (transfers.isEmpty()) {
-                item {
-                    BalanceHero(0, Modifier.padding(top = 8.dp)) {
-                        Text("Everyone is settled up", style = MaterialTheme.typography.headlineSmall)
-                        Text("Nothing to pay right now.", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            } else {
-                item { SectionHeader("Suggested payments") }
-                itemsIndexed(transfers) { i, t ->
-                    SegmentedListItem(
-                        shapes = ListItemDefaults.segmentedShapes(i, transfers.size),
-                        colors = segmentColors(),
-                        modifier = Modifier.padding(top = if (i > 0) ListItemDefaults.SegmentedGap else 0.dp),
-                        leadingContent = { Avatar(nameOf(t.from), t.from) },
-                        supportingContent = {
-                            Text(formatMoney(t.amountMinor, currency), style = MaterialTheme.typography.titleMedium)
-                        },
-                        trailingContent = { FilledTonalButton(onClick = { settling = t }) { Text("Settle") } },
-                    ) { Text("${nameOf(t.from)} → ${nameOf(t.to)}") }
-                }
-                item {
-                    Text(
-                        "The fewest payments that clear every balance.",
-                        Modifier.padding(start = 8.dp, top = 8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+    LazyColumn(
+        modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        if (transfers.isEmpty()) {
+            item {
+                BalanceHero(0, Modifier.padding(top = 8.dp)) {
+                    Text("Everyone is settled up", style = MaterialTheme.typography.headlineSmall)
+                    Text("Nothing to pay right now.", style = MaterialTheme.typography.bodyMedium)
                 }
             }
-            item { SectionHeader("Everyone") }
-            itemsIndexed(people, key = { _, m -> m.id }) { i, m ->
+        } else {
+            item { SectionHeader("Suggested payments") }
+            itemsIndexed(transfers) { i, t ->
                 SegmentedListItem(
-                    shapes = ListItemDefaults.segmentedShapes(i, people.size),
+                    shapes = ListItemDefaults.segmentedShapes(i, transfers.size),
                     colors = segmentColors(),
                     modifier = Modifier.padding(top = if (i > 0) ListItemDefaults.SegmentedGap else 0.dp),
-                    leadingContent = { Avatar(m.name, m.id) },
-                    trailingContent = { BalancePill(balances[m.id] ?: 0L, currency) },
-                ) { Text(nameOf(m.id)) }
+                    leadingContent = { Avatar(nameOf(t.from), t.from) },
+                    supportingContent = {
+                        Text(formatMoney(t.amountMinor, currency), style = MaterialTheme.typography.titleMedium)
+                    },
+                    trailingContent = { FilledTonalButton(onClick = { settling = t }) { Text("Settle") } },
+                ) { Text("${nameOf(t.from)} → ${nameOf(t.to)}") }
             }
-            item { Spacer(Modifier.height(32.dp)) }
+            item {
+                Text(
+                    "The fewest payments that clear every balance.",
+                    Modifier.padding(start = 8.dp, top = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
+        item { SectionHeader("Everyone") }
+        itemsIndexed(people, key = { _, m -> m.id }) { i, m ->
+            SegmentedListItem(
+                shapes = ListItemDefaults.segmentedShapes(i, people.size),
+                colors = segmentColors(),
+                modifier = Modifier.padding(top = if (i > 0) ListItemDefaults.SegmentedGap else 0.dp),
+                leadingContent = { Avatar(m.name, m.id) },
+                trailingContent = { BalancePill(balances[m.id] ?: 0L, currency) },
+            ) { Text(nameOf(m.id)) }
+        }
+        item { Spacer(Modifier.height(120.dp)) } // room for the floating toolbar
     }
 
     settling?.let { t ->

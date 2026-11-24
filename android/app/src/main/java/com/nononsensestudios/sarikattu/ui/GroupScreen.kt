@@ -3,6 +3,12 @@ package com.nononsensestudios.sarikattu.ui
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -75,6 +81,9 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
     val topBar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val toolbar = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
     val refresh = rememberPullToRefreshState()
+    val pager = rememberPagerState { 2 }
+    val scope = rememberCoroutineScope()
+    val showTab: (Int) -> Unit = { scope.launch { pager.animateScrollToPage(it) } }
 
     LaunchedEffect(groupId) { vm.run({ refreshGroup(groupId) }) }
 
@@ -105,45 +114,37 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             return@Scaffold
         }
         Box(Modifier.fillMaxSize().padding(padding)) {
-            PullToRefreshBox(
-                isRefreshing = busy,
-                onRefresh = { vm.run({ refreshGroup(groupId) }) },
-                modifier = Modifier.fillMaxSize(),
-                state = refresh,
-                indicator = {
-                    PullToRefreshDefaults.LoadingIndicator(
-                        state = refresh,
-                        isRefreshing = busy,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    )
-                },
-            ) {
-                LazyColumn(
-                    Modifier.fillMaxSize().nestedScroll(toolbar),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+            Column(Modifier.fillMaxSize()) {
+                PrimaryTabRow(selectedTabIndex = pager.currentPage) {
+                    listOf("Expenses", "Balances").forEachIndexed { i, label ->
+                        Tab(
+                            selected = pager.currentPage == i,
+                            onClick = { showTab(i) },
+                            text = { Text(label, style = MaterialTheme.typography.titleSmall) },
+                        )
+                    }
+                }
+                PullToRefreshBox(
+                    isRefreshing = busy,
+                    onRefresh = { vm.run({ refreshGroup(groupId) }) },
+                    modifier = Modifier.fillMaxSize(),
+                    state = refresh,
+                    indicator = {
+                        PullToRefreshDefaults.LoadingIndicator(
+                            state = refresh,
+                            isRefreshing = busy,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    },
                 ) {
-                    item { GroupHero(d) { nav.navigate(Routes.balances(groupId)) } }
-                    val sorted = d.expenses.sortedWith(
-                        compareByDescending<Expense> { it.spentOn }.thenByDescending { it.createdAt },
-                    )
-                    if (sorted.isEmpty()) {
-                        item {
-                            EmptyState(
-                                title = "No expenses yet",
-                                body = "Add the first one with the + button. Everyone in the group sees it.",
-                            )
+                    HorizontalPager(pager, Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
+                        when (page) {
+                            0 -> ExpensesTab(d, Modifier.nestedScroll(toolbar), onBalances = { showTab(1) }) {
+                                nav.navigate(Routes.expense(groupId, it.id))
+                            }
+                            else -> BalancesTab(vm, d, Modifier.nestedScroll(toolbar))
                         }
                     }
-                    sorted.groupBy { it.spentOn }.forEach { (date, dayExpenses) ->
-                        item(key = "h-$date") { SectionHeader(friendlyDate(date)) }
-                        itemsIndexed(dayExpenses, key = { _, e -> e.id }) { i, e ->
-                            ExpenseRow(
-                                e, d,
-                                index = i, count = dayExpenses.size,
-                            ) { nav.navigate(Routes.expense(groupId, e.id)) }
-                        }
-                    }
-                    item { Spacer(Modifier.height(120.dp)) }
                 }
             }
             HorizontalFloatingToolbar(
@@ -162,9 +163,12 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
                 IconButton(onClick = { context.startActivity(shareInvite(d)) }) {
                     Icon(Icons.Default.Share, "Share invite")
                 }
-                TextButton(onClick = { nav.navigate(Routes.balances(groupId)) }) {
-                    Icon(Icons.Default.Check, null)
-                    Text("Settle up", Modifier.padding(start = 8.dp))
+                // On the Balances tab the Settle buttons are right there, so only offer the shortcut elsewhere.
+                if (pager.currentPage == 0) {
+                    TextButton(onClick = { showTab(1) }) {
+                        Icon(Icons.Default.Check, null)
+                        Text("Settle up", Modifier.padding(start = 8.dp))
+                    }
                 }
             }
         }
@@ -183,6 +187,32 @@ fun GroupScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             },
             dismissButton = { TextButton(onClick = { confirmLeave = false }) { Text("Cancel") } },
         )
+    }
+}
+
+/** The Expenses tab: your balance on top, then expenses grouped by day, newest first. */
+@Composable
+private fun ExpensesTab(d: GroupDetail, modifier: Modifier, onBalances: () -> Unit, onOpen: (Expense) -> Unit) {
+    val sorted = d.expenses.sortedWith(
+        compareByDescending<Expense> { it.spentOn }.thenByDescending { it.createdAt },
+    )
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 16.dp)) {
+        item { GroupHero(d, onBalances) }
+        if (sorted.isEmpty()) {
+            item {
+                EmptyState(
+                    title = "No expenses yet",
+                    body = "Add the first one with the + button. Everyone in the group sees it.",
+                )
+            }
+        }
+        sorted.groupBy { it.spentOn }.forEach { (date, dayExpenses) ->
+            item(key = "h-$date") { SectionHeader(friendlyDate(date)) }
+            itemsIndexed(dayExpenses, key = { _, e -> e.id }) { i, e ->
+                ExpenseRow(e, d, index = i, count = dayExpenses.size) { onOpen(e) }
+            }
+        }
+        item { Spacer(Modifier.height(120.dp)) } // room for the floating toolbar
     }
 }
 

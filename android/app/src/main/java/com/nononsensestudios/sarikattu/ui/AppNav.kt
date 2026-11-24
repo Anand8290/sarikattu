@@ -27,14 +27,12 @@ object Routes {
     const val NEW_GROUP = "new-group"
     const val GROUP = "group/{groupId}"
     const val EXPENSE = "expense/{groupId}?expenseId={expenseId}"
-    const val BALANCES = "balances/{groupId}"
     const val JOIN = "join?code={code}"
     const val SETTINGS = "settings"
 
     fun group(id: String) = "group/$id"
     fun expense(groupId: String, expenseId: String? = null) =
         "expense/$groupId" + (expenseId?.let { "?expenseId=$it" } ?: "")
-    fun balances(groupId: String) = "balances/$groupId"
     fun join(code: String? = null) = "join" + (code?.let { "?code=${Uri.encode(it)}" } ?: "")
 }
 
@@ -82,9 +80,6 @@ fun AppNav(
                 ),
             ) {
                 ExpenseScreen(vm, nav, it.arguments!!.getString("groupId")!!, it.arguments?.getString("expenseId"))
-            }
-            composable(Routes.BALANCES, arguments = listOf(navArgument("groupId") { type = NavType.StringType })) {
-                BalancesScreen(vm, nav, it.arguments!!.getString("groupId")!!)
             }
             composable(
                 Routes.JOIN,
