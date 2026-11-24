@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -74,20 +75,21 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
             OutlinedTextField(
                 name, { name = it.take(80) }, Modifier.fillMaxWidth(),
                 label = { Text("Group name") }, placeholder = { Text("Goa trip") }, singleLine = true,
+                shape = FieldShape, textStyle = MaterialTheme.typography.titleLarge,
                 isError = showErrors && name.isBlank(),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
             OutlinedTextField(
                 currency, { currency = it.uppercase().take(3) }, Modifier.fillMaxWidth(),
-                label = { Text("Currency code") }, singleLine = true,
+                label = { Text("Currency code") }, singleLine = true, shape = FieldShape,
                 isError = !currencyValid,
                 supportingText = { if (!currencyValid) Text("Use a 3-letter code like INR or USD") },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             )
-            Text("Members", style = MaterialTheme.typography.titleSmall)
+            SectionHeader("Members")
             OutlinedTextField(
                 myName, { myName = it.take(40) }, Modifier.fillMaxWidth(),
-                label = { Text("Your name") }, singleLine = true,
+                label = { Text("Your name") }, singleLine = true, shape = FieldShape,
                 isError = showErrors && myName.isBlank(),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             )
@@ -95,7 +97,7 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         member, { others[i] = it.take(40) }, Modifier.weight(1f),
-                        label = { Text("Member ${i + 2}") }, singleLine = true,
+                        label = { Text("Member ${i + 2}") }, singleLine = true, shape = FieldShape,
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     )
                     IconButton(onClick = { others.removeAt(i) }) { Icon(Icons.Default.Close, "Remove member") }
@@ -122,8 +124,8 @@ fun NewGroupScreen(vm: AppViewModel, nav: NavHostController) {
                     )
                 },
                 enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Create group") }
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            ) { Text("Create group", style = MaterialTheme.typography.titleMedium) }
         }
     }
 }

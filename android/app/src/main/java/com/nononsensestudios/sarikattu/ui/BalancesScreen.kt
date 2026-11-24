@@ -2,26 +2,27 @@ package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -41,59 +43,79 @@ import com.nononsensestudios.sarikattu.domain.settlementSplits
 import com.nononsensestudios.sarikattu.domain.simplifyDebts
 import java.time.LocalDate
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
     val detail by vm.repo.group(groupId).collectAsState()
-    val d = detail ?: return
+    val d = detail ?: return ScreenLoading()
     val currency = d.group.currency
     val balances = computeBalances(d.members, d.expenses)
     val transfers = simplifyDebts(balances)
+    // You first, then whoever is furthest from zero, so big debts are easy to spot.
+    val people = d.members.sortedWith(
+        compareBy<com.nononsensestudios.sarikattu.domain.Member> { it.id != d.myMemberId }
+            .thenByDescending { kotlin.math.abs(balances[it.id] ?: 0L) },
+    )
     fun nameOf(id: String) = if (id == d.myMemberId) "You" else d.members.firstOrNull { it.id == id }?.name ?: "?"
     var settling by remember { mutableStateOf<Transfer?>(null) }
+    val haptic = rememberConfirmHaptic()
+    val topBar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(topBar.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = { Text("Balances") },
-                navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-                },
+                navigationIcon = { BackButton { nav.popBackStack() } },
+                scrollBehavior = topBar,
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-            items(d.members, key = { it.id }) { m ->
-                val b = balances[m.id] ?: 0L
-                ListItem(
-                    content = { Text(nameOf(m.id)) },
-                    trailingContent = {
-                        Text(
-                            when {
-                                b > 0 -> "+${formatMoney(b, currency)}"
-                                b < 0 -> "−${formatMoney(-b, currency)}"
-                                else -> "settled"
-                            },
-                            color = balanceColor(b),
-                        )
-                    },
-                )
-                HorizontalDivider()
+        LazyColumn(
+            Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+        ) {
+            if (transfers.isEmpty()) {
+                item {
+                    BalanceHero(0, Modifier.padding(top = 8.dp)) {
+                        Text("Everyone is settled up", style = MaterialTheme.typography.headlineSmall)
+                        Text("Nothing to pay right now.", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            } else {
+                item { SectionHeader("Suggested payments") }
+                itemsIndexed(transfers) { i, t ->
+                    SegmentedListItem(
+                        shapes = ListItemDefaults.segmentedShapes(i, transfers.size),
+                        colors = segmentColors(),
+                        modifier = Modifier.padding(top = if (i > 0) ListItemDefaults.SegmentedGap else 0.dp),
+                        leadingContent = { Avatar(nameOf(t.from), t.from) },
+                        supportingContent = {
+                            Text(formatMoney(t.amountMinor, currency), style = MaterialTheme.typography.titleMedium)
+                        },
+                        trailingContent = { FilledTonalButton(onClick = { settling = t }) { Text("Settle") } },
+                    ) { Text("${nameOf(t.from)} → ${nameOf(t.to)}") }
+                }
+                item {
+                    Text(
+                        "The fewest payments that clear every balance.",
+                        Modifier.padding(start = 8.dp, top = 8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            item {
-                Text(
-                    if (transfers.isEmpty()) "Everyone is settled up." else "Suggested payments",
-                    Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                )
+            item { SectionHeader("Everyone") }
+            itemsIndexed(people, key = { _, m -> m.id }) { i, m ->
+                SegmentedListItem(
+                    shapes = ListItemDefaults.segmentedShapes(i, people.size),
+                    colors = segmentColors(),
+                    modifier = Modifier.padding(top = if (i > 0) ListItemDefaults.SegmentedGap else 0.dp),
+                    leadingContent = { Avatar(m.name, m.id) },
+                    trailingContent = { BalancePill(balances[m.id] ?: 0L, currency) },
+                ) { Text(nameOf(m.id)) }
             }
-            items(transfers) { t ->
-                ListItem(
-                    content = { Text("${nameOf(t.from)} → ${nameOf(t.to)}") },
-                    supportingContent = { Text(formatMoney(t.amountMinor, currency)) },
-                    trailingContent = { FilledTonalButton(onClick = { settling = t }) { Text("Settle") } },
-                )
-            }
+            item { Spacer(Modifier.height(32.dp)) }
         }
     }
 
@@ -104,13 +126,16 @@ fun BalancesScreen(vm: AppViewModel, nav: NavHostController, groupId: String) {
             onDismiss = { settling = null },
             onConfirm = { amount ->
                 settling = null
-                vm.run({
-                    saveExpense(
-                        groupId = groupId, expenseId = null, title = "Payment",
-                        amountMinor = amount, payerId = t.from, splits = settlementSplits(t.to, amount),
-                        spentOn = LocalDate.now().toString(), isSettlement = true,
-                    )
-                })
+                vm.run(
+                    {
+                        saveExpense(
+                            groupId = groupId, expenseId = null, title = "Payment",
+                            amountMinor = amount, payerId = t.from, splits = settlementSplits(t.to, amount),
+                            spentOn = LocalDate.now().toString(), isSettlement = true,
+                        )
+                    },
+                    onSuccess = haptic,
+                )
             },
         )
     }
@@ -132,6 +157,7 @@ private fun SettleDialog(
                 OutlinedTextField(
                     text, { text = it.take(15) },
                     label = { Text("Amount ($currency)") }, singleLine = true,
+                    shape = FieldShape,
                     isError = amount == null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 )
