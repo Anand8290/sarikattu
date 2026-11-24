@@ -130,8 +130,10 @@ private val groupShapes = listOf(
 /** A group's badge: its initial in one of the Expressive shapes, chosen from the group id. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun GroupBadge(name: String, key: String, size: Dp = 48.dp) {
-    val (bg, fg) = paletteFor(key)
+fun GroupBadge(name: String, key: String, size: Dp = 48.dp, container: Color? = null, content: Color? = null) {
+    val (paletteBg, paletteFg) = paletteFor(key)
+    val bg = container ?: paletteBg
+    val fg = content ?: paletteFg
     val shape = groupShapes[(key.hashCode() and Int.MAX_VALUE) % groupShapes.size].toShape()
     Box(Modifier.size(size).clip(shape).background(bg), contentAlignment = Alignment.Center) {
         Text(initialOf(name), color = fg, style = MaterialTheme.typography.titleMedium)

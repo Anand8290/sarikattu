@@ -1,6 +1,12 @@
 package com.nononsensestudios.sarikattu.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,9 +94,6 @@ import java.time.ZoneOffset
 import java.util.Currency
 import java.util.Locale
 
-/** Groups up to this size pick people inline; bigger groups use summary rows and sheets. */
-private const val INLINE_MAX_MEMBERS = 6
-
 private val AMOUNT_CHARS = Regex("""\d*([.,]\d*)?""")
 
 private enum class Sheet { PAYER, SPLIT, DATE }
@@ -126,6 +129,20 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
     }
     val people = sortedMembers(d)
     fun nameOf(id: String) = if (id == d.myMemberId) "You" else d.members.firstOrNull { it.id == id }?.name ?: "?"
+    fun save() {
+        showErrors = true
+        if (!valid || amount == null) return
+        vm.run(
+            {
+                saveExpense(
+                    groupId = groupId, expenseId = existing?.id, title = title.trim(),
+                    amountMinor = amount, payerId = payerId,
+                    splits = splitEqually(amount, among), spentOn = date,
+                )
+            },
+            onSuccess = { haptic(); nav.popBackStack() },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -143,6 +160,9 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
                 actions = {
                     if (existing != null) {
                         IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Default.Delete, "Delete") }
+                    }
+                    if (existing?.isSettlement != true) {
+                        Button(onClick = ::save, enabled = !busy, modifier = Modifier.padding(end = 8.dp)) { Text("Save") }
                     }
                 },
             )
@@ -180,51 +200,47 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
                 return@Column
             }
 
-            AmountField(amountText, currency, isError = showErrors && amount == null) {
+            AmountCard(amountText, currency, isError = showErrors && amount == null) {
                 // Only digits and one decimal separator; the number keyboard alone doesn't guarantee that.
                 if (it.length <= 15 && it.matches(AMOUNT_CHARS)) amountText = it
             }
             if (showErrors && amount == null) {
                 Text(
                     "Enter an amount above zero",
-                    Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            OutlinedTextField(
+            TextField(
                 title, { title = it.take(80) }, Modifier.fillMaxWidth(),
-                placeholder = { Text("What was it for?") },
+                label = { Text("What was it?") },
+                placeholder = { Text("Dinner, cab, groceries") },
                 singleLine = true,
-                shape = CircleShape,
+                shape = FieldShape,
                 isError = showErrors && title.isBlank(),
-                supportingText = { if (showErrors && title.isBlank()) Text("Add a short title, like Dinner") },
+                supportingText = if (showErrors && title.isBlank()) {
+                    { Text("Add a short title, like Dinner") }
+                } else {
+                    null
+                },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
             )
-
-            if (d.members.size <= INLINE_MAX_MEMBERS) {
-                InlinePeople(
-                    people = people, me = d.myMemberId, payerId = payerId, among = among, shares = shares,
-                    currency = currency,
-                    onPayer = { payerId = it },
-                    onToggle = { id -> among = if (id in among) among - id else among + id },
-                )
-                SegmentedListItem(
-                    onClick = { sheet = Sheet.DATE },
-                    shapes = ListItemDefaults.segmentedShapes(0, 1),
-                    colors = segmentColors(),
-                    leadingContent = { Icon(Icons.Default.DateRange, null) },
-                    overlineContent = { Text("Date") },
-                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
-                ) { Text(friendlyDate(date)) }
-            } else {
-                SummaryRows(
-                    d = d, people = people, payerName = nameOf(payerId), among = among, amount = amount,
-                    date = date, currency = currency,
-                    onPayer = { sheet = Sheet.PAYER }, onSplit = { sheet = Sheet.SPLIT }, onDate = { sheet = Sheet.DATE },
-                )
-            }
+            AssistChip(
+                onClick = { sheet = Sheet.DATE },
+                label = { Text(friendlyDate(date)) },
+                leadingIcon = { Icon(Icons.Default.DateRange, null, Modifier.size(AssistChipDefaults.IconSize)) },
+            )
+            SummaryRows(
+                d = d, people = people, payerName = nameOf(payerId), among = among, amount = amount,
+                currency = currency,
+                onPayer = { sheet = Sheet.PAYER }, onSplit = { sheet = Sheet.SPLIT },
+            )
             if (among.isEmpty()) {
                 Text(
                     "Pick at least one person to split with",
@@ -232,26 +248,7 @@ fun ExpenseScreen(vm: AppViewModel, nav: NavHostController, groupId: String, exp
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-
-            Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = {
-                    showErrors = true
-                    if (!valid || amount == null) return@Button
-                    vm.run(
-                        {
-                            saveExpense(
-                                groupId = groupId, expenseId = existing?.id, title = title.trim(),
-                                amountMinor = amount, payerId = payerId,
-                                splits = splitEqually(amount, among), spentOn = date,
-                            )
-                        },
-                        onSuccess = { haptic(); nav.popBackStack() },
-                    )
-                },
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            ) { Text("Save", style = MaterialTheme.typography.titleMedium) }
+            Spacer(Modifier.height(24.dp))
         }
     }
 
@@ -323,34 +320,51 @@ private fun sortedMembers(d: GroupDetail): List<Member> =
 
 private fun label(m: Member, me: String?) = if (m.id == me) "You" else m.name
 
-/** The amount as the hero of the screen, calculator style, with the currency symbol in front. */
+/** The amount in a tinted card, calculator style, with the group's currency as a chip. */
 @Composable
-private fun AmountField(value: String, currency: String, isError: Boolean, onChange: (String) -> Unit) {
+private fun AmountCard(value: String, currency: String, isError: Boolean, onChange: (String) -> Unit) {
     val symbol = remember(currency) {
         runCatching { Currency.getInstance(currency).getSymbol(Locale.getDefault()) }.getOrDefault(currency)
     }
-    val style = MaterialTheme.typography.displayLarge.copy(
-        textAlign = TextAlign.Center,
-        color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+    val onCard = MaterialTheme.colorScheme.onPrimaryContainer
+    val style = MaterialTheme.typography.displayMedium.copy(
+        color = if (isError) MaterialTheme.colorScheme.error else onCard,
     )
-    BasicTextField(
-        value = value,
-        onValueChange = onChange,
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        textStyle = style,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-        visualTransformation = PrefixTransformation(symbol),
-        decorationBox = { inner ->
-            Box(contentAlignment = Alignment.Center) {
-                if (value.isEmpty()) {
-                    Text("${symbol}0", style = style.copy(color = MaterialTheme.colorScheme.outlineVariant))
+    Surface(
+        Modifier.fillMaxWidth().padding(top = 8.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = onCard,
+    ) {
+        Column(Modifier.padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Amount", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) {
+                    Text(
+                        currency,
+                        Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
-                inner()
             }
-        },
-    )
+            BasicTextField(
+                value = value,
+                onValueChange = onChange,
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                textStyle = style,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                cursorBrush = SolidColor(onCard),
+                visualTransformation = PrefixTransformation("$symbol "),
+                decorationBox = { inner ->
+                    Box {
+                        if (value.isEmpty()) Text("$symbol 0", style = style.copy(color = onCard.copy(alpha = 0.4f)))
+                        inner()
+                    }
+                },
+            )
+        }
+    }
 }
 
 /** Shows "₹" in front of the typed amount without making it part of the text. */
@@ -365,53 +379,19 @@ private class PrefixTransformation(private val prefix: String) : VisualTransform
     }
 }
 
-/** Small groups: tap a name to pick the payer, tap faces to include or leave people out. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
-@Composable
-private fun InlinePeople(
-    people: List<Member>, me: String?, payerId: String, among: List<String>, shares: Map<String, Long>,
-    currency: String, onPayer: (String) -> Unit, onToggle: (String) -> Unit,
-) {
-    SectionHeader("Paid by", Modifier.padding(top = 0.dp))
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        people.forEach { m ->
-            ToggleButton(checked = payerId == m.id, onCheckedChange = { onPayer(m.id) }) { Text(label(m, me)) }
-        }
-    }
-    SectionHeader("Split equally between")
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        people.forEach { m ->
-            val included = m.id in among
-            Column(
-                Modifier.width(56.dp).clickable { onToggle(m.id) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Avatar(m.name, m.id, size = 48.dp, dimmed = !included)
-                Text(label(m, me), style = MaterialTheme.typography.labelMedium, maxLines = 1)
-                Text(
-                    shares[m.id]?.let { formatMoney(it, currency) } ?: "—",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
-
-/** Big groups: three summary rows that open sheets, so the screen looks the same for 7 or 300 people. */
+/** Who paid and who shares it: summary rows that open sheets, the same for 2 or 300 people. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SummaryRows(
     d: GroupDetail, people: List<Member>, payerName: String, among: List<String>, amount: Long?,
-    date: String, currency: String, onPayer: () -> Unit, onSplit: () -> Unit, onDate: () -> Unit,
+    currency: String, onPayer: () -> Unit, onSplit: () -> Unit,
 ) {
     val chevron: @Composable () -> Unit = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
     val gap = Modifier.padding(top = ListItemDefaults.SegmentedGap)
     Column {
         SegmentedListItem(
             onClick = onPayer,
-            shapes = ListItemDefaults.segmentedShapes(0, 3),
+            shapes = ListItemDefaults.segmentedShapes(0, 2),
             colors = segmentColors(),
             leadingContent = { Icon(Icons.Default.Person, null) },
             overlineContent = { Text("Paid by") },
@@ -419,7 +399,7 @@ private fun SummaryRows(
         ) { Text(payerName) }
         SegmentedListItem(
             onClick = onSplit,
-            shapes = ListItemDefaults.segmentedShapes(1, 3),
+            shapes = ListItemDefaults.segmentedShapes(1, 2),
             colors = segmentColors(),
             modifier = gap,
             leadingContent = { Icon(Icons.Default.Face, null) },
@@ -444,15 +424,6 @@ private fun SummaryRows(
                 },
             )
         }
-        SegmentedListItem(
-            onClick = onDate,
-            shapes = ListItemDefaults.segmentedShapes(2, 3),
-            colors = segmentColors(),
-            modifier = gap,
-            leadingContent = { Icon(Icons.Default.DateRange, null) },
-            overlineContent = { Text("Date") },
-            trailingContent = chevron,
-        ) { Text(friendlyDate(date)) }
     }
 }
 
